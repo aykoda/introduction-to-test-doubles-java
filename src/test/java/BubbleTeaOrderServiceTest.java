@@ -4,7 +4,14 @@ import com.techreturners.bubbleteaordersystem.service.BubbleTeaOrderService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import testhelper.DummySimpleLogger;
+
+import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -52,6 +59,43 @@ public class BubbleTeaOrderServiceTest {
         //Verify Mock was called with the BubbleTeaOrderRequest result object
         verify(mockMessenger).sendBubbleTeaOrderRequestEmail(result);
         verify(mockMessenger, times(1)).sendBubbleTeaOrderRequestEmail(result);
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("parametersGenerator")
+    void shouldCreateBubbleTeaOrderRequestByClassParameters(BubbleTeaOrderRequest expectedResult, boolean expectedDebit){
+
+        //Arrange
+        BubbleTea bubbleTea = new BubbleTea(BubbleTeaTypeEnum.OolongMilkTea, 4.5);
+        BubbleTeaRequest bubbleTeaRequest = new BubbleTeaRequest(paymentDetails, bubbleTea);
+
+        //Act
+        BubbleTeaOrderRequest result = bubbleTeaOrderService.createOrderRequest(bubbleTeaRequest);
+
+        //Assert
+        assertEquals(expectedResult.getName(), result.getName());
+        assertNotEquals(expectedResult.getAddress(), result.getAddress());
+        assertEquals(expectedResult.getBubbleTeaType(), result.getBubbleTeaType());
+        assertEquals(expectedDebit, result.getDebitCardDigits().equals(expectedResult.getDebitCardDigits()));
+    }
+
+    // and then somewhere in this test class
+    private static Stream<Arguments> parametersGenerator() {
+
+        return Stream.of(
+                Arguments.of(new BubbleTeaOrderRequest(
+                        "hello kitty",
+                        "sanrio puroland2",
+                        "0123456789",
+                        BubbleTeaTypeEnum.OolongMilkTea
+                ), true),
+                Arguments.of(new BubbleTeaOrderRequest(
+                        "hello kitty",
+                        "sanrio",
+                        "1111111",
+                        BubbleTeaTypeEnum.OolongMilkTea
+                ),false));
     }
 
 }
